@@ -39,8 +39,8 @@ RUN apt-get update && apt-get install -y \
 #     && npm install --global bower \
      && version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;")
 
-COPY php.ini /usr/local/etc/php
-COPY xdebug.ini /usr/local/etc/php/conf.d/
+COPY .config/php.ini /usr/local/etc/php
+COPY .config/xdebug.ini /usr/local/etc/php/conf.d/
 
 # Setup the Composer installer
 RUN curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
