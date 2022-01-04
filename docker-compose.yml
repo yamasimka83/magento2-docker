@@ -1,0 +1,88 @@
+version: "3"
+
+services:
+  nginx:
+    build:
+      context: ./images/nginx/1.18
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "8080:80"
+      - "4431:443"
+    volumes:
+      - ../public_html:/var/www/current/src:delegated
+      - ./images/nginx/1.18/config/nginx.conf.sample:/etc/nginx/magento2.conf.sample:delegated
+      - ./images/nginx/1.18/config/magento2.conf:/etc/nginx/conf.d/magento2.conf:delegated
+    networks:
+      - backend-php
+    links:
+      - php-fpm
+    restart: always
+
+  php-fpm:
+    container_name: php-fpm
+    build:
+      context: ./images/php
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - sock:/sock
+      - ../public_html/:/var/www/current/src:delegated
+      - ./images/php/config/php/xdebug.ini:/etc/php/7.4/mods-available/xdebug.ini:delegated
+      - ~/.composer:/home/www/.composer:delegated
+    networks:
+      - backend-php
+#    environment:
+#      XDEBUG_ENABLED: 1
+#      REDIS_ENABLED: 1
+
+  mysql:
+    image: mariadb:10.4
+    container_name: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3309:3306
+    volumes:
+      - ./volumes/mysql:/var/lib/mysql:delegated
+      - ./config/mysql/init:/docker-entrypoint-initdb.d:delegated
+      - ./config/mysql/init/conf/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:delegated
+
+    environment:
+      MYSQL_ROOT_PASSWORD: magento
+      MYSQL_DATABASE: magento
+      MYSQL_USER: magento
+      MYSQL_PASSWORD: magento
+    networks:
+      - backend-php
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.9.3
+    environment:
+      - cluster.name=env_default
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    restart: always
+    ports:
+      - 9200:9200
+    volumes:
+      - es-data:/usr/share/elasticsearch/data:delegated
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+networks:
+  backend-php:
+    driver: bridge
+
+volumes:
+  sock:
+  es-data:
+    driver: local
