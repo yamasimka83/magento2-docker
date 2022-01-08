@@ -26,4 +26,4 @@ USER www-data:www-data
 
 VOLUME /var/www
 
-WORKDIR /var/www/html
+WORKDIR /var/www/html/public_html

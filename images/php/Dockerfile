@@ -23,26 +23,27 @@ RUN apt-get update && apt-get install -y \
         libpq-dev \
         libzip-dev \
         libjpeg62-turbo-dev \
-        libonig-dev  \
+        libonig-dev \
+        libwebp-dev \
         git \
         vim \
-#        nodejs \
-#        npm \
+        libfreetype6-dev \
+        nodejs \
+        npm \
      && ln -s /usr/lib/x86_64-linux-gnu/libldap.so /usr/lib/libldap.so \
      && ln -s /usr/lib/x86_64-linux-gnu/liblber.so /usr/lib/liblber.so \
      && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-     && docker-php-ext-configure gd --with-jpeg \
+     && docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp \
      && pecl install mcrypt && docker-php-ext-enable mcrypt \
      && docker-php-ext-install -j$(nproc) bz2 bcmath intl soap gd xsl sockets zip pdo_mysql pdo_pgsql ldap tidy \
      && docker-php-ext-enable opcache \
      && pecl install xdebug && docker-php-ext-enable xdebug \
-#     && npm install --global bower \
+     && npm install --global bower \
      && version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;")
 
-COPY .config/php.ini /usr/local/etc/php
-COPY .config/xdebug.ini /usr/local/etc/php/conf.d/
+COPY ./config/php.ini /usr/local/etc/php
+COPY ./config/xdebug.ini /usr/local/etc/php/conf.d/
 
-# Setup the Composer installer
 RUN curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
  && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
  && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" \
@@ -57,3 +58,5 @@ USER www-data
 USER root
 
 RUN usermod -u 1000 www-data
+
+WORKDIR /var/www/html/public_html
