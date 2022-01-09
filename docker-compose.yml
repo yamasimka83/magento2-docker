@@ -24,7 +24,7 @@ services:
   php-fpm:
     container_name: php-fpm
     build:
-      context: ./images/php
+      context: ./images/php/7.4
       dockerfile: Dockerfile
     ports:
       - 9000:9000
