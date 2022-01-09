@@ -41,6 +41,9 @@ RUN apt-get update && apt-get install -y \
      && npm install --global bower \
      && version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;")
 
+RUN apt-get install -y msmtp mailutils
+COPY ./config/msmtprc /etc/msmtprc
+
 COPY ./config/php.ini /usr/local/etc/php
 COPY ./config/xdebug.ini /usr/local/etc/php/conf.d/
 

@@ -2,79 +2,73 @@ version: "3"
 
 services:
   nginx:
+    container_name: nginx
     build:
       context: ./images/nginx/1.18
       dockerfile: Dockerfile
-    container_name: nginx
     ports:
       - "8080:80"
       - "4431:443"
     volumes:
-      - ../public_html:/var/www/html/public_html:delegated
-      - ./images/nginx/1.18/config/nginx.conf.sample:/etc/nginx/magento2.conf.sample:delegated
-      - ./images/nginx/1.18/config/magento2.conf:/etc/nginx/conf.d/magento2.conf:delegated
-    networks:
-      - backend-php
+      - ../public_html:/var/www/html/public_html:cached
+      - ./images/nginx/1.18/config/nginx.conf.sample:/etc/nginx/magento2.conf.sample:cached
+      - ./images/nginx/1.18/config/magento2.conf:/etc/nginx/conf.d/magento2.conf:cached
     links:
       - mysql
       - php-fpm
+      - redis
     restart: always
+    networks:
+      - backend-php
 
   php-fpm:
     container_name: php-fpm
     build:
       context: ./images/php
       dockerfile: Dockerfile
+    ports:
+      - 9000:9000
+    env_file: env/phpfpm.env
+    volumes:
+      - sock:/sock
+      - ../public_html/:/var/www/html/public_html:cached
+      - ./images/php/7.4/config/xdebug.ini:/etc/php/7.4/mods-available/xdebug.ini:cached
+      - ~/.composer:/home/www/.composer:cached
     links:
       - mysql
       - elasticsearch
+      - redis
     restart: always
-    ports:
-      - 9000:9000
-    volumes:
-      - sock:/sock
-      - ../public_html/:/var/www/html/public_html:delegated
-      - ./images/php/config/xdebug.ini:/etc/php/7.4/mods-available/xdebug.ini:delegated
-      - ~/.composer:/home/www/.composer:delegated
     networks:
       - backend-php
-    environment:
-      XDEBUG_ENABLED: 1
-#      REDIS_ENABLED: 1
 
   mysql:
-    image: mariadb:10.4
     container_name: mysql
+    image: mariadb:10.4
     command: --default-authentication-plugin=mysql_native_password
-    restart: always
     ports:
       - 3309:3306
+    env_file: env/db.env
     volumes:
-      - ./volumes/mysql:/var/lib/mysql:delegated
-      - ./config/mysql/init:/docker-entrypoint-initdb.d:delegated
-      - ./config/mysql/init/conf/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:delegated
-
-    environment:
-      MYSQL_ROOT_PASSWORD: magento
-      MYSQL_DATABASE: magento
-      MYSQL_USER: magento
-      MYSQL_PASSWORD: magento
+      - ./volumes/mysql:/var/lib/mysql:cached
+      - ./images/mysql:/docker-entrypoint-initdb.d:cached
+      - ./images/mysql/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:cached
+    restart: always
     networks:
       - backend-php
 
   elasticsearch:
     container_name: elasticsearch
     image: elasticsearch:7.9.3
+    ports:
+      - 9200:9200
     environment:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - "cluster.routing.allocation.disk.threshold_enabled=false"
       - "index.blocks.read_only_allow_delete"
-    restart: always
-    ports:
-      - 9200:9200
     volumes:
-      - es-data:/usr/share/elasticsearch/data:delegated
+      - es-data:/usr/share/elasticsearch/data:cached
     ulimits:
       memlock:
         soft: -1
@@ -82,6 +76,54 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    restart: always
+    networks:
+      - backend-php
+
+  redis:
+    container_name: redis
+    image: redis:6.0.16
+    restart: always
+    networks:
+      - backend-php
+
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_ARBITRARY=1
+    volumes:
+      - /sessions
+    external_links:
+      - mysql
+    depends_on:
+      - mysql
+      - redis
+    restart: always
+    networks:
+      - backend-php
+
+  mailcatcher:
+    container_name: mailcatcher
+    image: sj26/mailcatcher
+    ports:
+      - "1080:1080"
+    restart: always
+    networks:
+      - backend-php
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3.8.22-management-alpine
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    env_file: ./env/rabbitmq.env
+    volumes:
+      - ./volumes/rebbitmq:/var/lib/rabbitmq
+    restart: always
     networks:
       - backend-php
 
