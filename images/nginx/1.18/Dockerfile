@@ -1,4 +1,4 @@
-FROM nginx:1.13
+FROM nginx:1.18
 
 MAINTAINER Roman Sliusar <roman.sliusar95@gmail.com>
 
