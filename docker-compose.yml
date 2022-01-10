@@ -51,6 +51,7 @@ services:
     env_file: env/db.env
     volumes:
       - ./volumes/mysql:/var/lib/mysql:cached
+      - ./images/mysql/dumps:/var/www/html/dumps
       - ./images/mysql:/docker-entrypoint-initdb.d:cached
       - ./images/mysql/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:cached
     restart: always
@@ -114,18 +115,18 @@ services:
     networks:
       - backend-php
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: rabbitmq:3.8.22-management-alpine
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    env_file: ./env/rabbitmq.env
-    volumes:
-      - ./volumes/rebbitmq:/var/lib/rabbitmq
-    restart: always
-    networks:
-      - backend-php
+#  rabbitmq:
+#    container_name: rabbitmq
+#    image: rabbitmq:3.8.22-management-alpine
+#    ports:
+#      - "15672:15672"
+#      - "5672:5672"
+#    env_file: ./env/rabbitmq.env
+#    volumes:
+#      - ./volumes/rebbitmq:/var/lib/rabbitmq
+#    restart: always
+#    networks:
+#      - backend-php
 
 networks:
   backend-php:
