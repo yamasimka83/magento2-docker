@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ $1 == "generated" ]]; then
+  docker exec -it php-fpm rm -rf generated/*
+elif [[ $1 == "static" ]]; then
+  docker exec -it php-fpm rm -rf pub/static/frontend/* var/view_pewprocessed/*
+elif [[ $1 == "cache" ]]; then
+  docker exec -it php-fpm rm -rf var/cache/* var/page_cache/*
+elif [[ $1 == "all" ]]; then
+  docker exec -it php-fpm rm -rf generated/* pub/static/frontend/* var/view_pewprocessed/* var/cache/* var/page_cache/*
+elif [[ $1 == "help" ]]; then
+  echo "Allowed options: generated, static, cache, all"
+else
+  echo "Allowed options: generated, static, cache, all"
+fi
