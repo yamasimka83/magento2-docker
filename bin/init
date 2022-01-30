@@ -16,42 +16,42 @@ else
     echo "File ./env/db.env created."
 fi
 
-if [ -f "./images/create_database.sql" ]
+if [ -f "./images/mysql/create_database.sql" ]
 then
-    echo "File ./images/create_database.sql exists."
+    echo "File ./images/mysql/create_database.sql exists."
 else
-    cp ./images/create_database.sql.sample ./images/create_database.sql
-    echo "File ./images/create_database.sql created."
+    cp ./images/mysql/create_database.sql.sample ./images/mysql/create_database.sql
+    echo "File ./images/mysql/create_database.sql created."
 fi
 
 echo Input config settings
 
-read -prr 'Project name for docker (ex: projectname): ' dockerName
-read -prr 'Server name: ' serverName
+read -rp 'Project name for docker (ex: projectname): ' dockerName
+read -rp 'Server name: ' serverName
 
-read -pr 'Nginx http port (default: 80): ' nginxUnsecurePort
+read -rp 'Nginx http port (default: 80): ' nginxUnsecurePort
 nginxUnsecurePort=${nginxUnsecurePort:-80}
-read -pr 'Nginx https port (default: 443): ' nginxSecurePort
+read -rp 'Nginx https port (default: 443): ' nginxSecurePort
 nginxSecurePort=${nginxSecurePort:-443}
-read -pr 'Php-fpm port (default: 9000): ' phpFpmPort
+read -rp 'Php-fpm port (default: 9000): ' phpFpmPort
 phpFpmPort=${phpFpmPort:-9000}
-read -pr 'Mysql port (default: 3306): ' mysqlPort
+read -rp 'Mysql port (default: 3306): ' mysqlPort
 mysqlPort=${mysqlPort:-3306}
-read -pr 'Phpmyadmin port (default: 8081): ' phpmyadminPort
+read -rp 'Phpmyadmin port (default: 8081): ' phpmyadminPort
 phpmyadminPort=${phpmyadminPort:-8081}
-read -pr 'Elasticsearch port (default: 9200): ' elasticsearchPort
+read -rp 'Elasticsearch port (default: 9200): ' elasticsearchPort
 elasticsearchPort=${elasticsearchPort:-9200}
-read -pr 'Mailcatcher port (default: 1080): ' mailcatcherPort
+read -rp 'Mailcatcher port (default: 1080): ' mailcatcherPort
 mailcatcherPort=${mailcatcherPort:-1080}
-read -pr 'RabbitMQ port (default: 5672): ' rabbitMQPort
+read -rp 'RabbitMQ port (default: 5672): ' rabbitMQPort
 rabbitMQPort=${rabbitMQPort:-5672}
-read -pr 'RabbitMQ admin port (default: 15672): ' rabbitMQAdminPort
+read -rp 'RabbitMQ admin port (default: 15672): ' rabbitMQAdminPort
 rabbitMQAdminPort=${rabbitMQAdminPort:-15672}
 
-read -pr 'MYSQL_ROOT_PASSWORD: ' dbRootPassword
-read -pr 'MYSQL_DATABASE: ' databaseName
-read -pr 'MYSQL_USER: ' dbUser
-read -pr 'MYSQL_PASSWORD: ' dbPassword
+read -srp 'MYSQL_ROOT_PASSWORD: ' dbRootPassword
+read -rp 'MYSQL_DATABASE: ' databaseName
+read -rp 'MYSQL_USER: ' dbUser
+read -srp 'MYSQL_PASSWORD: ' dbPassword
 
 function replaceStr {
   sed -i "s/$1/$2/g" "$3"
@@ -91,5 +91,3 @@ replaceStr db_user_name "$dbUser" ./bin/create_dump
 replaceStr project_name "$dockerName" ./bin/from_dump
 replaceStr db_name "$databaseName" ./bin/from_dump
 replaceStr db_user_name "$dbUser" ./bin/from_dump
-
-
