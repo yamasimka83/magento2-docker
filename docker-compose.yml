@@ -1,68 +1,75 @@
 version: "3"
 
 services:
-  nginx:
-    container_name: nginx
+  project_name_nginx:
+    container_name: project_name_nginx
     build:
       context: ./images/nginx/1.18
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
-      - "4431:443"
+      - "nginxUnsecurePort:80"
+      - "nginxSecurePort:443"
     volumes:
       - ../public_html:/var/www/html/public_html:cached
-      - ./images/nginx/1.18/config/nginx.conf.sample:/etc/nginx/magento2.conf.sample:cached
-      - ./images/nginx/1.18/config/magento2.conf:/etc/nginx/conf.d/magento2.conf:cached
+      - ./conf/nginx/magento2.conf.sample:/etc/nginx/magento2.conf.sample:cached
+      - ./conf/nginx/magento2.conf:/etc/nginx/conf.d/magento2.conf:cached
     links:
-      - mysql
-      - php-fpm
-      - redis
+      - project_name_mysql
+      - project_name_php
+      - project_name_redis
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  php-fpm:
-    container_name: php-fpm
+  project_name_php:
+    container_name: project_name_php
     build:
       context: ./images/php/7.4
       dockerfile: Dockerfile
     ports:
-      - 9000:9000
+      - "phpFpmPort:9000"
     env_file: env/phpfpm.env
+    environment:
+      PHP_IDE_CONFIG: serverName=Docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - sock:/sock
       - ../public_html/:/var/www/html/public_html:cached
-      - ./images/php/7.4/config/xdebug.ini:/etc/php/7.4/mods-available/xdebug.ini:cached
+      - ./conf/php/xdebug.ini:/etc/php/7.4/mods-available/xdebug.ini:cached
+      - ./conf/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:cached
+      - ./conf/php/php.ini:/usr/local/etc/php:cached
+      - ./conf/php/msmtprc:/etc/msmtprc:cached
       - ~/.composer:/home/www/.composer:cached
     links:
-      - mysql
-      - elasticsearch
-      - redis
+      - project_name_mysql
+      - project_name_elasticsearch
+      - project_name_redis
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  mysql:
-    container_name: mysql
+  project_name_mysql:
+    container_name: project_name_mysql
     image: mariadb:10.4
     command: --default-authentication-plugin=mysql_native_password
     ports:
-      - 3309:3306
+      - "mysqlPort:3306"
     env_file: env/db.env
     volumes:
+      - - ../public_html/:/var/www/html/public_html:cached
       - ./volumes/mysql:/var/lib/mysql:cached
-      - ./images/mysql/dumps:/var/www/html/dumps
       - ./images/mysql:/docker-entrypoint-initdb.d:cached
-      - ./images/mysql/config/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:cached
+      - ./conf/mysql/mysqld.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf:cached
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  elasticsearch:
-    container_name: elasticsearch
+  project_name_elasticsearch:
+    container_name: project_name_elasticsearch
     image: elasticsearch:7.9.3
     ports:
-      - 9200:9200
+      - "elasticsearchPort:9200"
     environment:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
@@ -79,20 +86,20 @@ services:
         hard: 65536
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  redis:
-    container_name: redis
+  project_name_redis:
+    container_name: project_name_redis
     image: redis:6.0.16
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  phpmyadmin:
-    container_name: phpmyadmin
+  project_name_phpmyadmin:
+    container_name: project_name_phpmyadmin
     image: phpmyadmin/phpmyadmin
     ports:
-      - "8081:80"
+      - "phpmyadminPort:80"
     environment:
       - PMA_ARBITRARY=1
     volumes:
@@ -104,32 +111,32 @@ services:
       - redis
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-  mailcatcher:
-    container_name: mailcatcher
+  project_name_mailcatcher:
+    container_name: project_name_mailcatcher
     image: sj26/mailcatcher
     ports:
-      - "1080:1080"
+      - "mailcatcherPort:1080"
     restart: always
     networks:
-      - backend-php
+      - project_name_app
 
-#  rabbitmq:
-#    container_name: rabbitmq
-#    image: rabbitmq:3.8.22-management-alpine
-#    ports:
-#      - "15672:15672"
-#      - "5672:5672"
-#    env_file: ./env/rabbitmq.env
-#    volumes:
-#      - ./volumes/rebbitmq:/var/lib/rabbitmq
-#    restart: always
-#    networks:
-#      - backend-php
+  project_name_rabbitmq:
+    container_name: project_name_rabbitmq
+    image: rabbitmq:3.8.22-management-alpine
+    ports:
+      - "rabbitMQPort:5672"
+      - "rabbitMQAdminPort:15672"
+    env_file: ./env/rabbitmq.env
+    volumes:
+      - ./volumes/rebbitmq:/var/lib/rabbitmq
+    restart: always
+    networks:
+      - project_name_app
 
 networks:
-  backend-php:
+  project_name_app:
     driver: bridge
 
 volumes:

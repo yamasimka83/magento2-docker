@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker exec -it php-fpm bin/magento $1
+docker-compose exec --user www-data project_name_php /var/www/html/public_html/bin/magento "$@"
