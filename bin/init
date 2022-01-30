@@ -89,5 +89,6 @@ replaceStr project_name "$dockerName" ./bin/create_dump
 replaceStr db_name "$databaseName" ./bin/create_dump
 replaceStr db_user_name "$dbUser" ./bin/create_dump
 replaceStr project_name "$dockerName" ./bin/from_dump
+replaceStr project_name "$dockerName" ./bin/xdebug
 replaceStr db_name "$databaseName" ./bin/from_dump
 replaceStr db_user_name "$dbUser" ./bin/from_dump
