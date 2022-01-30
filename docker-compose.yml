@@ -105,10 +105,10 @@ services:
     volumes:
       - /sessions
     external_links:
-      - project_namemysql
+      - project_name_mysql
     depends_on:
-      - project_namemysql
-      - project_nameredis
+      - project_name_mysql
+      - project_name_redis
     restart: always
     networks:
       - project_name_app
